@@ -6,17 +6,30 @@
 #include <DHT_U.h>
 #include "Credential.h"   // id wifi + mqtt
 
-#define PIN_DHT11 0 // relay board linked on GPIO0
-#define ESP_NAME "ESP_DHT11"
+#define PIN_DHT 0 // relay board linked on GPIO0
+#define ESP_NAME "ESP_DHT22"
 
 const int N = 15;
 const int period = 1000 * 60 * N; // (1 minute = 1 s * 60) * N minutes
 
-DHT dht(PIN_DHT11, DHT11);
+DHT dht(PIN_DHT, DHT22);
 long lastMeasure = 0;
 
 WiFiClient espClient;
 PubSubClient clientMQTT(mqttServer, mqttPort, espClient);
+
+void blinkLED(int nb)
+{
+  for (int i = 0; i < nb; i++)
+  {
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(60);
+    digitalWrite(LED_BUILTIN, HIGH);
+
+    if (i < nb - 1)
+      delay(100);
+  }
+}
 
 void connectWifi()
 {
@@ -29,7 +42,7 @@ void connectWifi()
       ;
 
     // WiFi connected -> LED_BUILTIN shutdown
-    digitalWrite(LED_BUILTIN, LOW);
+    blinkLED(5);
   }
   delay(100);
   // mqtt
@@ -80,15 +93,19 @@ void publish()
 void setup()
 {
   Serial.begin(115200);
+  delay(100);
   pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);
+  digitalWrite(LED_BUILTIN, LOW);
   delay(100);
   dht.begin();
+  delay(100);
   // init wifi
   WiFi.mode(WIFI_STA);
   WiFi.setHostname(ESP_NAME);
+  delay(100);
   // init mqtt
   clientMQTT.setServer(mqttServer, mqttPort);
+  delay(100);
 }
 
 void loop()
